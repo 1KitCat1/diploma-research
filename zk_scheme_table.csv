@@ -1,0 +1,6 @@
+Scheme,Proof size (B),Prover time (ms),Verifier time (ms),EVM gas,Setup,Post-quantum,Verifier compl.
+Groth16,192,"2,300",1.5,"260,900",Per-circuit,No,O(1)
+PLONK,480,"7,323",3.0,"379,500",Universal SRS,No,O(1)
+Halo2,1500,"6,200",8.0,"600,000",Transparent (no setup),No,O(log N)
+Bulletproofs,1584,"15,100",305.0,"1,409,730",Transparent,No,O(N)
+zk-STARK,84747,"22,500",30.0,"2,255,568",Transparent,Yes,O(log² N)

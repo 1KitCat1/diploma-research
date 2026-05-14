@@ -1,0 +1,27 @@
+[package]
+name = "spartan-membership"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "bench"
+path = "src/bench.rs"
+
+[dependencies]
+# Microsoft Spartan: R1CS + Bulletproofs-style IPA, no trusted setup
+spartan = "0.9"
+merlin = "3"
+
+# secp256k1 for off-circuit witness (note: Spartan uses curve25519 internally)
+k256 = { version = "0.13", features = ["ecdsa", "arithmetic"] }
+sha2 = "0.10"
+rand = "0.8"
+hex = "0.4"
+csv = "1.3"
+serde = { version = "1", features = ["derive"] }
+bincode = "1"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+opt-level = 3

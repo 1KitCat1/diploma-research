@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Go build artifacts
+empirical/membership-bench
+*.exe
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
+
+# MS Office lock files
+~$*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+.claude/
+CLAUDE.md
+
+
+target/

@@ -1,0 +1,7 @@
+Accumulator,Proof size (B),ZK constraints,Trusted setup,Post-quantum,Update cost,Non-membership,EVM verify
+Merkle (Poseidon),640,"4,280",No,Yes (hash-based),O(log n),Hard (sorted variant),O(log n) hashes
+Sparse Merkle (Poseidon),640,"4,280",No,Yes,O(log n),Native,O(log n) hashes
+Merkle (Keccak256),672,"3,678,540",No,Yes,O(log n),Hard,Native (cheap on EVM)
+Verkle Tree (KZG),192,"150,000",Yes (KZG SRS),No,O(log_b n) MSM,Native,1 pairing + scalar muls
+RSA Accumulator,384,"3,000,000",Yes (RSA modulus),No,O(1) mod-exp,Native (Wesolowski),Mod-exp precompile
+Pairing-based (BLS),48,"5,000,000",Yes (q-SDH SRS),No,O(1) for prover,Native,1 pairing
