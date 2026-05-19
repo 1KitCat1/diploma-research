@@ -36,14 +36,22 @@ Multi-Scheme Cross-Chain Cost Analysis}
     Kharkiv, Ukraine\\
     ORCID: 0009-0006-1367-6298
   }
+  \and
+  \IEEEauthorblockN{Alexander Vechur}
+  \IEEEauthorblockA{
+    Department of Software Engineering\\
+    Kharkiv National University of Radioelectronics\\
+    Kharkiv, Ukraine\\
+    ORCID: 0000-0001-9605-1475
+  }
 }
 
 \maketitle
 
 %---------------------------------------------------------------------------
 \begin{abstract}
-We extend our prior work on anonymous cross-chain proofs of membership
-with three contributions.
+This paper revisits the anonymous cross-chain proof-of-membership
+construction of~\cite{Kravchenko2023} and contributes three extensions.
 First, we evaluate six cryptographic accumulators---Merkle trees
 (Poseidon and Keccak256), Sparse Merkle Trees, Verkle Trees (KZG),
 RSA accumulators, and pairing-based commitments (BLS)---across
@@ -51,10 +59,11 @@ proof size, zero-knowledge (ZK) constraint count, trusted-setup
 requirements, and non-membership support.
 Second, we benchmark five ZK proof systems (Groth16, PLONK,
 Halo2, Bulletproofs, zk-STARK) against a common circuit model
-calibrated to our published ECDSA membership circuit.
-Third, we present a fresh gnark~v0.14.0 implementation of the ECDSA
+calibrated to the published ECDSA membership circuit
+of~\cite{Kravchenko2023}.
+Third, we present a new gnark~v0.14.0 implementation of the ECDSA
 membership circuit that reduces R1CS constraints by~74.6\% and proving
-key size by~77.1\% relative to our 2023 baseline~\cite{Kravchenko2023}.
+key size by~77.1\% relative to the 2023 baseline~\cite{Kravchenko2023}.
 We close with an empirical cost model for on-chain verification across
 nine EVM-compatible chains, showing that per-proof cost spans four
 orders of magnitude across (chain,~scheme) combinations, and derive
@@ -83,11 +92,12 @@ and on-chain verification cost for this relation?
 gas markets, how do verification costs distribute across chains?
 
 This paper addresses all three questions in a unified framework.
-Beyond the analytical study, we provide fresh empirical benchmarks:
-a re-implemented gnark~v0.14.0 circuit that is 74.6\% leaner than
-the 2023 baseline, plus open-source Rust benchmark scaffolding for
-three additional proof systems (Halo2 via halo2-lib, Bulletproofs
-via Spartan, and zk-STARK via RISC~Zero).
+Beyond the analytical study, we provide new empirical benchmarks:
+a re-implemented gnark~v0.14.0 circuit that requires 74.6\% fewer
+R1CS constraints than the 2023 baseline, together with open-source
+Rust benchmark scaffolding for three additional proof systems
+(Halo2 via halo2-lib, Bulletproofs via Spartan, and zk-STARK via
+RISC~Zero)~\cite{ArtifactRepo}.
 
 Section~\ref{sec:background} establishes notation and the relay protocol.
 Section~\ref{sec:related} surveys related work.
@@ -215,22 +225,26 @@ in a set defined by chain~$A$ state, rather than the consensus state itself.
 \caption{Accumulator comparison at $n = 2^{20}$ members.
 Poseidon-based trees dominate when ZK constraint count matters;
 Verkle (KZG) offers the smallest proof but requires a trusted setup
-and $35\times$ more in-circuit constraints than Poseidon.}
+and $35\times$ more in-circuit constraints than Poseidon.
+\textsuperscript{$\dagger$}Post-quantum security of Poseidon/MiMC
+is conjectured: cryptanalysis of arithmetisation-oriented hashes
+(Gr\"{o}bner-basis and algebraic attacks) remains active research.}
 \label{tab:accumulators}
 \centering
+\footnotesize
 \begin{tabular}{lrrllllr}
 \toprule
 \textbf{Accumulator} & \textbf{Proof (B)} & \textbf{ZK constr.}
-  & \textbf{Trusted setup} & \textbf{Post-quantum}
-  & \textbf{Update} & \textbf{Non-membership}
+  & \textbf{Setup} & \textbf{PQ}
+  & \textbf{Update} & \textbf{Non-memb.}
   & \textbf{EVM verify} \\
 \midrule
-Merkle (Poseidon)        & 640  &   4,280   & No  & Yes & $O(\log n)$ & Hard (sorted) & $O(\log n)$ hashes \\
-Sparse Merkle (Poseidon) & 640  &   4,280   & No  & Yes & $O(\log n)$ & Native        & $O(\log n)$ hashes \\
-Merkle (Keccak256)       & 672  & 3,678,540 & No  & Yes & $O(\log n)$ & Hard          & Native (cheap)  \\
-Verkle Tree (KZG)        & 192  &   150,000 & Yes & No  & $O(\log_b n)$ & Native & 1 pairing \\
-RSA~\cite{RSAAccumulator} & 384 & 3,000,000 & Yes & No & $O(1)$ mod-exp & Native~\cite{Wesolowski} & mod-exp \\
-BLS pairing~\cite{KZG}   &  48 & 5,000,000 & Yes & No & $O(1)$         & Native        & 1 pairing \\
+Merkle (Poseidon)         & 640  &   4{,}280   & No  & Conj.\textsuperscript{$\dagger$} & $O(\log n)$ & Hard (sorted) & $O(\log n)$ hashes \\
+Sparse Merkle (Poseidon)  & 640  &   4{,}280   & No  & Conj.\textsuperscript{$\dagger$} & $O(\log n)$ & Native        & $O(\log n)$ hashes \\
+Merkle (Keccak256)        & 672  & 3{,}678{,}540 & No & Yes & $O(\log n)$ & Hard          & Native (cheap)  \\
+Verkle Tree (KZG)         & 192  &   150{,}000 & Yes & No  & $O(\log_b n)$ & Native       & 1 pairing \\
+RSA~\cite{RSAAccumulator} & 384  & 3{,}000{,}000 & Yes & No & $O(1)$ mod-exp & Native~\cite{Wesolowski} & mod-exp \\
+BLS pairing~\cite{KZG}    &  48  & 5{,}000{,}000 & Yes & No & $O(1)$         & Native       & 1 pairing \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -292,10 +306,20 @@ They are unsuitable for our setting.
   \label{fig:proof_size}
 \end{figure}
 
-We adopt the Sparse Merkle Tree with Poseidon in all subsequent sections:
-it supports both membership and non-membership proofs, requires no
-trusted setup, is post-quantum secure under collision resistance of
-Poseidon, and imposes minimal ZK overhead.
+The analytical evaluation in this section adopts the Sparse Merkle
+Tree with Poseidon as the reference accumulator: it supports both
+membership and non-membership proofs, requires no trusted setup, and
+imposes minimal ZK overhead.
+Its post-quantum security rests on the conjectured collision resistance
+of Poseidon; we return to this caveat in Section~\ref{sec:discussion}.
+We note that the empirical implementation in
+Section~\ref{sec:circuit} uses MiMC~\cite{MiMC} in place of Poseidon,
+since MiMC was available as a native, audited gadget in the gnark
+toolchain at the time of implementation; both hashes belong to the
+same arithmetisation-oriented family and impose comparable in-circuit
+cost ($\approx$110--160 constraints per call), so the constraint-count
+reductions reported in Section~\ref{sec:circuit} are not specific to
+the choice of hash.
 
 %---------------------------------------------------------------------------
 \section{Zero-Knowledge Scheme Comparison}
@@ -331,13 +355,15 @@ and within~1.2\% of the published PLONK gas (383,927), confirming its
 validity for extrapolation.
 Benchmark scaffolding in Rust for Halo2 (halo2-lib~\cite{halo2lib}),
 Bulletproofs (Spartan~\cite{Spartan}), and zk-STARK (RISC~Zero~\cite{RISCZero})
-is published alongside this paper; full empirical results will be reported
+is published in the accompanying artefact
+repository~\cite{ArtifactRepo}; full empirical results will be reported
 once hardware runs complete.
 
 Table~\ref{tab:zkschemes} reports results at 300,000~R1CS constraints.
-\textbf{Groth16} remains optimal for production use: it achieves the
+\textbf{Groth16} remains the most practical choice under our evaluation
+criteria (proof size, verifier latency, and on-chain gas), achieving the
 smallest proof (192~B), fastest verifier, and lowest on-chain gas
-($\approx$~261k).
+($\approx$~261k) of the five schemes considered.
 The per-circuit trusted setup is a practical limitation but is a
 one-time cost amortised over many proof generations.
 \textbf{PLONK} replaces the per-circuit setup with a universal SRS,
@@ -375,9 +401,9 @@ Fig.~\ref{fig:evm_gas} plots EVM gas on a log scale.
 Fig.~\ref{fig:prover_time} shows prover wall-clock time: Groth16 at
 2.3~s is $9.8\times$ faster than zk-STARK (22.5~s) and $6.6\times$ faster
 than Bulletproofs (15.1~s).
-This prover-time advantage compounds the gas advantage, making Groth16
-the dominant choice for interactive protocols where prover latency is
-user-perceptible.
+This prover-time advantage compounds the gas advantage, favouring
+Groth16 in interactive protocols where prover latency is
+user-perceptible, subject to the trusted-setup requirement.
 
 %---------------------------------------------------------------------------
 \section{Improved ECDSA Membership Circuit}
@@ -470,7 +496,7 @@ These distinctions are documented in the accompanying benchmark code.
 
 \subsection{Implementation}
 
-We implement a fresh ECDSA membership circuit in gnark~v0.14.0~\cite{gnark}
+We implement a new ECDSA membership circuit in gnark~v0.14.0~\cite{gnark}
 that differs from the 2023 circuit in three ways.
 First, we use gnark's native emulated-field ECDSA gadget for secp256k1,
 which decomposes the 256-bit secp256k1 field into four 64-bit BN254 Fr
@@ -523,6 +549,35 @@ $\mathbb{G}_1$ points and one $\mathbb{G}_2$ point over BN254).
 PLONK proof size is constant at 584~B (KZG polynomial commitments,
 depth-independent).
 Both fit comfortably in a single EVM transaction calldata slot.
+
+\subsection{Reproducibility}
+\label{sec:reproducibility}
+
+All empirical measurements in Tables~\ref{tab:groth16}
+and~\ref{tab:plonk} were obtained on an Apple~MacBook~Pro (M1~Pro,
+8~performance + 2~efficiency cores at up to~3.2~GHz, 16~GB unified
+memory) running macOS~14 (Darwin~23.3).
+The toolchain is Go~1.23.5 (\texttt{darwin/arm64}),
+gnark~v0.14.0~\cite{gnark}, and gnark-crypto~v0.19.0; the proving curve
+is BN254 with witness generation over secp256k1.
+Compilation uses default Go compiler flags (no \texttt{-gcflags},
+no \texttt{-ldflags="-s -w"}).
+
+Each (backend,~depth) cell in
+Tables~\ref{tab:groth16} and~\ref{tab:plonk} corresponds to a single
+measurement run on an otherwise idle machine.
+Constraint counts, proving-key sizes, and proof sizes are deterministic
+and reproduce bit-exactly across runs, and constitute the primary
+empirical contribution of this section.
+Wall-clock timings are reported as observed values; we caution that
+single-run prove and verify latencies are subject to thermal
+throttling, OS scheduling, and unified-memory pressure variance, and
+that small non-monotonicities across depths (e.g.\ Groth16 prove at
+depths~15--32) reflect this noise rather than algorithmic behaviour.
+The complete benchmark harness, raw CSV outputs, and analysis scripts
+are available at the artefact repository~\cite{ArtifactRepo}, enabling
+re-execution and statistical aggregation under different hardware
+profiles.
 
 %---------------------------------------------------------------------------
 \section{Cross-Chain Verification Cost}
@@ -759,10 +814,12 @@ and on-chain verifiability.
 Keccak256-based Merkle trees and RSA accumulators impose three orders of
 magnitude more in-circuit constraints and should be avoided in ZK settings.
 
-A comparison of five proof systems shows that Groth16 minimises all
-three of proof size (192~B), verifier gas (261k), and prover latency
-for our circuit.
-PLONK is the preferred alternative when trusted setup is unacceptable.
+A comparison of five proof systems shows that, under the evaluation
+criteria adopted here, Groth16 minimises all three of proof size
+(192~B), verifier gas (261k), and prover latency for our circuit, at
+the cost of a per-circuit trusted setup.
+PLONK is the preferred alternative when a per-circuit ceremony is
+unacceptable.
 Empirical Spartan benchmarks (158~kB proof, 27~s prove, 115~ms verify)
 show that theoretical Bulletproofs complexity models substantially
 underestimate real proof sizes and overestimate verifier cost at
